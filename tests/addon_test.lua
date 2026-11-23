@@ -113,3 +113,13 @@ T.test("addon_wipe_shows_nothing_and_secret_ids_are_ignored", function()
     fire("ENCOUNTER_END", "S", "Boss", 1, 5, 1)
     T.eq(FRR.Reminder.IsShown(), false)
 end)
+
+T.test("addon_reminder_times_out_after_duration", function()
+    local FRR, fire, _, clock, later = world()
+    local tickFn
+    _G.C_Timer.NewTicker = function(_, fn) tickFn = fn; return { Cancel = function() end } end
+    kill(fire, later, 5)
+    T.eq(FRR.Reminder.IsShown(), true)
+    clock.up = clock.up + 29; tickFn(); T.eq(FRR.Reminder.IsShown(), true)
+    clock.up = clock.up + 1.5; tickFn(); T.eq(FRR.Reminder.IsShown(), false)
+end)
