@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.1.2
+- Left-click the reminder to hide it (hover it for a reminder).
+
 ## v0.1.1
 - Skips low-level bosses more reliably: reads the boss's level from your target when there are no boss frames.
 - Two bosses killed before looting are each remembered as looted.
