@@ -1,0 +1,10 @@
+package-as: ForeverRealsReminder
+
+manual-changelog: CHANGELOG.md
+
+ignore:
+  - dev
+  - tests
+  - docs
+  - HANDOFF.md
+  - CHANGELOG.md

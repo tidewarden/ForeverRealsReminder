@@ -1,0 +1,14 @@
+## Interface: 16001
+## Title: ForeverRealsReminder
+## Notes: Reminds you to loot your Tarnished Undermine Real after a dungeon boss kill.
+## Author: tidewarden
+## Version: @project-version@
+## X-Curse-Project-ID: TODO
+## SavedVariables: ForeverRealsReminderDB
+
+Settings.lua
+Rules.lua
+Reminder.lua
+Widgets.lua
+Options.lua
+ForeverRealsReminder.lua
