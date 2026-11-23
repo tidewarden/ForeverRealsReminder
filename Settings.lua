@@ -9,7 +9,7 @@ local DEFAULTS = {
     duration = 30,   -- seconds the reminder stays up if you don't loot
     minLevel = 60,   -- your level for reminders (Reals drop from level 55+ bosses)
     x = 0,           -- offset from the top centre of the screen
-    y = -140,
+    y = -217,        -- about 28% down a 768-tall UI
 }
 local LIMITS = {
     scale = { 0.5, 2 },
