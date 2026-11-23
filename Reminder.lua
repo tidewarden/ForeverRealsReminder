@@ -24,6 +24,18 @@ local function build()
     frame:SetClampedToScreen(true)
     frame:SetMovable(true)
     frame:RegisterForDrag("LeftButton")
+    -- Always takes the mouse: a left-click hides it, and hovering says so.
+    frame:EnableMouse(true)
+    frame:SetScript("OnMouseUp", function(_, button)
+        if button == "LeftButton" and not unlocked then GameTooltip:Hide(); Reminder.Hide() end
+    end)
+    frame:SetScript("OnEnter", function(self)
+        if unlocked then return end
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:SetText("Click to hide", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    frame:SetScript("OnLeave", function() GameTooltip:Hide() end)
     frame:SetScript("OnDragStart", function(self) if unlocked then self:StartMoving() end end)
     frame:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
@@ -87,7 +99,6 @@ end
 function Reminder.ToggleUnlock()
     build()
     unlocked = not unlocked
-    frame:EnableMouse(unlocked)
     if unlocked then
         setIcon()
         frame.sub:SetText("Drag me, then /frr lock")
