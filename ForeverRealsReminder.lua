@@ -4,8 +4,6 @@
 local ADDON, FRR = ...
 local S, R = FRR.Settings, FRR.Rules
 
-function FRR.Print(msg) DEFAULT_CHAT_FRAME:AddMessage("|cff33e5ffForeverRealsReminder|r: " .. msg) end
-
 local function secret(v) return issecretvalue and issecretvalue(v) end
 local function now() return (GetServerTime and GetServerTime()) or time() end
 
@@ -125,34 +123,19 @@ local function onCurrency(currencyType, _, change)
     if kill then
         R.MarkLooted(FRR.db, charKey(), kill.id, resetAt())
         local name, instanceType, instanceID = instance()
-        if instanceType == "party" and R.LearnDungeon(FRR.db, instanceID, name) then
-            FRR.Print("learned a new Real dungeon: " .. tostring(name))
-        end
+        if instanceType == "party" then R.LearnDungeon(FRR.db, instanceID, name) end
     end
 end
 
 SLASH_FOREVERREALSREMINDER1 = "/frr"
 SlashCmdList.FOREVERREALSREMINDER = function(msg)
     local cmd = (msg or ""):lower():match("^(%S*)")
-    if cmd == "" or cmd == "options" then
-        FRR.Options.Open()
-    elseif cmd == "test" then
+    if cmd == "test" then
         FRR.Reminder.Show("Test")
     elseif cmd == "unlock" or cmd == "lock" then
-        FRR.Print(FRR.Reminder.ToggleUnlock() and "unlocked: drag the reminder, then /frr lock" or "locked")
-    elseif cmd == "debug" then
-        local name, instanceType, instanceID = instance()
-        local q, max = currency()
-        FRR.Print(("here: %s (%s, id %s), Real dungeon: %s"):format(tostring(name), tostring(instanceType),
-            tostring(instanceID), tostring(R.IsRealDungeon(FRR.db, instanceType, instanceID, name))))
-        FRR.Print(("Reals: %s / %s, boss level now: %s"):format(tostring(q), tostring(max), tostring(bossLevel())))
-        local l = FRR.last
-        if l then
-            FRR.Print(("last kill: %s (id %s, boss level %s) in %s (id %s): %s"):format(tostring(l.encounter),
-                tostring(l.id), tostring(l.bossLevel), tostring(l.instance), tostring(l.instanceID), l.reason))
-        end
+        FRR.Reminder.ToggleUnlock() -- the frame itself says "Drag me, then /frr lock"
     else
-        FRR.Print("/frr options | test | unlock | lock | debug")
+        FRR.Options.Open()
     end
 end
 

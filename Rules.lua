@@ -81,7 +81,7 @@ function Rules.Prune(db, now)
 end
 
 -- ctx: { success, playerLevel, minPlayerLevel, inDungeon, bossLevel, lootedToday, atCap }
--- Returns show, reason (the reason is for /frr debug).
+-- Returns show, reason (why, kept in FRR.last).
 function Rules.ShouldRemind(ctx)
     if ctx.success ~= 1 then return false, "wipe" end
     if not ctx.inDungeon then return false, "not a Real dungeon" end

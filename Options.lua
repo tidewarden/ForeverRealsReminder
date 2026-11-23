@@ -69,7 +69,5 @@ function Options.Open()
     elseif Options.panel and InterfaceOptionsFrame_OpenToCategory then
         InterfaceOptionsFrame_OpenToCategory(Options.panel) -- the first call only opens the frame
         InterfaceOptionsFrame_OpenToCategory(Options.panel)
-    else
-        FRR.Print("options are unavailable on this client")
     end
 end

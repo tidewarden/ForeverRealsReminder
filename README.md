@@ -13,4 +13,3 @@ so you don't forget to loot it. It disappears when you loot the Real, or after 3
 - `/frr`: options (on/off, size, how long it stays up)
 - `/frr test`: show a test reminder
 - `/frr unlock` / `/frr lock`: move it
-- `/frr debug`: the current dungeon, your Reals and why the last kill did or didn't show a reminder

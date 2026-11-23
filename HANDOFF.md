@@ -14,7 +14,9 @@ icon at the top of the screen until the Real is looted or 30 s pass.
 Drop rules come from forg.gg and conquestcapped.com (Nov 2026); Wowhead's pages had no drop details.
 
 ## Still to verify in game
-- Do Forever's Classic dungeons fire ENCOUNTER_START/END for every boss? (`/frr debug` after a kill)
-- Classic instance IDs: check with `/frr debug` inside each dungeon.
+- Do Forever's Classic dungeons fire ENCOUNTER_START/END for every boss? 
+- Classic instance IDs: unverified; the Classic names are matched too.
 - Is `UnitLevel("boss1")` readable in dungeons? If not, early BRD bosses (<55) will still show a reminder.
 - Does CURRENCY_DISPLAY_UPDATE carry quantityChange when looting a Real?
+
+No chat output by the user's request: no debug command, no prints. `FRR.last` keeps the last kill's decision for tests.
