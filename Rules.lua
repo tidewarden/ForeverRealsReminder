@@ -18,10 +18,18 @@ Rules.DUNGEON_IDS = {
     [289] = "Scholomance",
     [329] = "Stratholme",      -- Live and Dead
 }
--- Forever's new dungeons: their IDs aren't published, so they're matched by name and then learned.
+-- Names as GetInstanceInfo gives them (English client): Forever's new dungeons, whose IDs aren't
+-- published, and the Classic ones in case Forever renumbered them.
 Rules.DUNGEON_NAMES = {
     ["Blackmaw Hold"] = true,
     ["Shaper's Terrace"] = true,
+    ["Blackrock Depths"] = true,
+    ["Blackrock Spire"] = true,
+    ["Lower Blackrock Spire"] = true,
+    ["Upper Blackrock Spire"] = true,
+    ["Dire Maul"] = true,
+    ["Scholomance"] = true,
+    ["Stratholme"] = true,
 }
 
 function Rules.IsRealDungeon(db, instanceType, instanceID, name)

@@ -16,6 +16,7 @@ local function world(opts)
     _G.GetInstanceInfo = function() return unpack(game.instance) end
     _G.UnitLevel = function(unit) if unit == "player" then return game.level end return game.bossLevel end
     _G.UnitExists = function(unit) return unit == "boss1" end
+    _G.UnitCanAttack = function() return true end
     _G.C_DateAndTime = { GetSecondsUntilDailyReset = function() return 3600 end }
     _G.C_CurrencyInfo = { GetCurrencyInfo = function() return { quantity = game.quantity, maxQuantity = game.max, iconFileID = 1 } end }
     local later = {}
@@ -77,4 +78,38 @@ T.test("addon_learns_unlisted_dungeon_when_a_real_drops", function()
     T.eq(FRR.db.learnedDungeons[109], "Sunken Temple")
     kill(fire, later, 8)
     T.eq(FRR.Reminder.IsShown(), true)
+end)
+
+T.test("addon_loot_without_quantity_change_still_hides_and_learns", function()
+    local FRR, fire, game, _, later = world({ instance = { "Sunken Temple", "party", 1, "", 5, 0, false, 109 } })
+    kill(fire, later, 7)
+    game.quantity = 6
+    fire("CURRENCY_DISPLAY_UPDATE", 3469, nil, nil)
+    T.eq(FRR.db.learnedDungeons[109], "Sunken Temple")
+end)
+
+T.test("addon_two_kills_then_two_loots_credit_each_boss", function()
+    local FRR, fire, game, _, later = world()
+    kill(fire, later, 1); kill(fire, later, 2)
+    game.quantity = 6; fire("CURRENCY_DISPLAY_UPDATE", 3469, 6, 1)
+    game.quantity = 7; fire("CURRENCY_DISPLAY_UPDATE", 3469, 7, 1)
+    T.eq(FRR.Rules.LootedToday(FRR.db, "Me-Realm", 1, 1000000000), true)
+    T.eq(FRR.Rules.LootedToday(FRR.db, "Me-Realm", 2, 1000000000), true)
+end)
+
+T.test("addon_target_level_used_when_no_boss_frames", function()
+    local FRR, fire, _, _, later = world({ bossLevel = 52 })
+    _G.UnitExists = function(unit) return unit == "target" end
+    kill(fire, later, 3)
+    T.eq(FRR.last.bossLevel, 52); T.eq(FRR.Reminder.IsShown(), false)
+end)
+
+T.test("addon_wipe_shows_nothing_and_secret_ids_are_ignored", function()
+    local FRR, fire = world()
+    fire("ENCOUNTER_END", 9, "Boss", 1, 5, 0)
+    T.eq(FRR.Reminder.IsShown(), false)
+    _G.issecretvalue = function(v) return v == "S" end
+    fire("ENCOUNTER_START", "S", "Boss", 1, 5)
+    fire("ENCOUNTER_END", "S", "Boss", 1, 5, 1)
+    T.eq(FRR.Reminder.IsShown(), false)
 end)

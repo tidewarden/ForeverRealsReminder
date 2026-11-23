@@ -29,12 +29,15 @@ local function currency()
     return info.quantity, info.maxQuantity
 end
 
--- Highest readable level among the boss units; nil if none can be read (hidden or not shown).
+-- Highest readable level among the boss units, or failing those your and your party's targets (Classic
+-- dungeons may have no boss frames). Errs towards a higher level, i.e. towards showing the reminder.
+-- nil if nothing can be read.
+local UNITS = { "boss1", "boss2", "boss3", "boss4", "boss5", "target", "party1target", "party2target",
+                "party3target", "party4target" }
 local function bossLevel()
     local best
-    for i = 1, 5 do
-        local unit = "boss" .. i
-        local exists = UnitExists(unit)
+    for _, unit in ipairs(UNITS) do
+        local exists = UnitExists(unit) and UnitCanAttack("player", unit)
         if not secret(exists) and exists then
             local level = UnitLevel(unit)
             if not secret(level) and type(level) == "number" then
@@ -46,9 +49,19 @@ local function bossLevel()
     return best
 end
 
--- The fight being tracked, and the last kill (its Real is credited to it).
-local fight, lastKill
+-- The fight being tracked; kills whose Real hasn't come in yet (oldest first); the last known Real total.
+local fight
+local pending = {}
 local lastQuantity
+local PENDING_FOR = 300 -- seconds a kill waits to be credited with a Real
+
+local function sampleLevel()
+    if not fight then return end
+    local level = bossLevel()
+    if level and (fight.level == nil or level == -1 or (fight.level ~= -1 and level > fight.level)) then
+        fight.level = level
+    end
+end
 
 local function decide(encounterID, encounterName, success)
     local name, instanceType, instanceID = instance()
@@ -71,43 +84,46 @@ local function decide(encounterID, encounterName, success)
 end
 
 local function onEncounterStart(encounterID)
+    if secret(encounterID) then return end
     fight = { id = encounterID }
+    sampleLevel()
     -- Boss frames fill in a moment after the pull.
-    C_Timer.After(1, function()
-        if fight and fight.id == encounterID then
-            fight.level = bossLevel() or fight.level
-            if fight.level then
-                FRR.db.bossLevels = FRR.db.bossLevels or {}
-                FRR.db.bossLevels[encounterID] = fight.level
-            end
-        end
-    end)
+    C_Timer.After(1, function() if fight and fight.id == encounterID then sampleLevel() end end)
 end
 
 local function onEncounterEnd(encounterID, encounterName, success)
-    if secret(encounterID) or secret(success) then return end
-    if fight and fight.id == encounterID then fight.level = bossLevel() or fight.level end
-    if success == 1 then lastKill = { id = encounterID, at = GetTime() } end
+    if secret(encounterID) or secret(success) then fight = nil; return end
+    if fight and fight.id == encounterID then
+        sampleLevel()
+        if fight.level then
+            FRR.db.bossLevels = FRR.db.bossLevels or {}
+            FRR.db.bossLevels[encounterID] = fight.level
+        end
+    end
+    if success == 1 then pending[#pending + 1] = { id = encounterID, at = GetTime() } end
     if S.Get("enabled") and decide(encounterID, encounterName, success) then
-        lastQuantity = currency()
         FRR.Reminder.Show(encounterName)
     end
     fight = nil
 end
 
-local function onCurrency(currencyType, quantity, change)
+local function onCurrency(currencyType, _, change)
     if secret(currencyType) or currencyType ~= R.CURRENCY then return end
+    local q = currency()
     local gained
     if not secret(change) and type(change) == "number" then
         gained = change > 0
-    else
-        local q = currency()
-        gained = q and lastQuantity and q > lastQuantity
+    else -- quantityChange is optional: compare with the last total instead
+        gained = q ~= nil and lastQuantity ~= nil and q > lastQuantity
     end
+    if q then lastQuantity = q end
     if not gained then return end
     FRR.Reminder.Hide()
-    if lastKill and GetTime() - lastKill.at < 300 then
-        R.MarkLooted(FRR.db, charKey(), lastKill.id, resetAt())
+    -- Credit the oldest kill still waiting: bosses are usually looted in the order they die.
+    while pending[1] and GetTime() - pending[1].at > PENDING_FOR do table.remove(pending, 1) end
+    local kill = table.remove(pending, 1)
+    if kill then
+        R.MarkLooted(FRR.db, charKey(), kill.id, resetAt())
         local name, instanceType, instanceID = instance()
         if instanceType == "party" and R.LearnDungeon(FRR.db, instanceID, name) then
             FRR.Print("learned a new Real dungeon: " .. tostring(name))
@@ -149,6 +165,7 @@ events:SetScript("OnEvent", function(_, event, ...)
         FRR.db = ForeverRealsReminderDB
     elseif event == "PLAYER_LOGIN" then
         R.Prune(FRR.db, now())
+        lastQuantity = currency()
         FRR.Options.Register()
         events:RegisterEvent("ENCOUNTER_START")
         events:RegisterEvent("ENCOUNTER_END")
